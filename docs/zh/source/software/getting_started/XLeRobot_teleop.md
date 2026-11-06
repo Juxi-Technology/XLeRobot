@@ -84,3 +84,19 @@ python software/examples/10_xlerobot_record_bi_leader.py \
 主动臂标定文件：`~/.cache/huggingface/lerobot/calibration/teleoperators/so_leader/<leader_id>_left.json` 与 `_right.json`，不存在会自动进入标定流程。
 
 录制需要额外的包，在 lerobot 仓库目录执行 `pip install -e ".[dataset]"`。
+
+### 10. 底盘单独控制
+
+底盘可以不接手臂和头部单独驱动。插件提供 `xlerobot_base` 机器人类型：只打开 port2（右臂 + 底盘的驱动板），把三个轮子切到速度模式，同一块板上的右臂电机不会被写入，保持原来的位置。
+
+```bash
+# 本地：只接 port2 这块驱动板
+python software/examples/11_xlerobot_base_keyboard.py --port2=/dev/ttyACM1
+
+# 远程：树莓派上跑 xlerobot_host，电脑控底盘
+python software/examples/11_xlerobot_base_keyboard.py --remote_ip=192.168.0.108
+```
+
+远程模式只发送 `x.vel` / `y.vel` / `theta.vel`，Host 端的 `send_action` 只会写底盘，手臂不动。
+
+实现见 `software/src/robots/xlerobot/base.py`（`XLerobotBase`，注册为 `--robot.type=xlerobot_base`）。

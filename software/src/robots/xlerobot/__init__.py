@@ -1,3 +1,4 @@
+from .base import XLerobotBase, XLerobotBaseConfig
 from .config_xlerobot import XLerobotClientConfig, XLerobotConfig, XLerobotHostConfig
 from .xlerobot import XLerobot
 from .xlerobot_client import XLerobotClient

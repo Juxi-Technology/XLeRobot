@@ -86,4 +86,21 @@ Base keyboard: I / K forward-backward, J / L strafe, U / O rotate, N / M speed, 
 
 Leader calibration files live at `~/.cache/huggingface/lerobot/calibration/teleoperators/so_leader/<leader_id>_left.json` and `_right.json`; a missing file triggers the calibration flow.
 
-Recording needs an extra package: run `pip install -e ".[dataset]"` inside the lerobot repo. 
+Recording needs an extra package: run `pip install -e ".[dataset]"` inside the lerobot repo.
+
+
+### Standalone Base Control
+
+The base can be driven on its own, without the arms or the head. The plugin registers a `xlerobot_base` robot type: it opens only port2 (the right-arm + wheels bus), switches the three wheels to velocity mode, and never writes to the right-arm motors on that bus.
+
+```bash
+# Local: only the port2 driver board is connected
+python software/examples/11_xlerobot_base_keyboard.py --port2=/dev/ttyACM1
+
+# Remote: xlerobot_host on the Pi, base control on the laptop
+python software/examples/11_xlerobot_base_keyboard.py --remote_ip=192.168.0.108
+```
+
+In remote mode only `x.vel` / `y.vel` / `theta.vel` are sent, and the Host's `send_action` writes the base alone.
+
+See `software/src/robots/xlerobot/base.py` for the implementation (`XLerobotBase`, registered as `--robot.type=xlerobot_base`). 
