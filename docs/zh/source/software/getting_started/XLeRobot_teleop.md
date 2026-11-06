@@ -12,6 +12,8 @@
 
 包括双臂、移动底座和头部电机的完整系统控制。运行[4_xlerobot_teleop_keyboard.py](https://github.com/Vector-Wangel/XLeRobot/blob/main/software/examples/4_xlerobot_teleop_keyboard.py)进行基于键盘的整个XLeRobot系统综合遥操作，左臂、右臂、底座移动和头部控制有单独的按键映射。
 
+远程控制时在命令后加 `--remote_ip=<Host IP>`，树莓派端先运行 `python -m lerobot_robot_xlerobot.xlerobot_host`；不加 `--remote_ip` 则直接驱动本机有线连接的机器人。
+
 ### 6. Xbox控制器遥操作  
 
 完整XLeRobot系统的直观游戏手柄控制。运行[5_xlerobot_teleop_xbox.py](https://github.com/Vector-Wangel/XLeRobot/blob/main/software/examples/5_xlerobot_teleop_xbox.py)进行基于Xbox控制器的遥操作，具有人体工学摇杆和扳机映射，实现自然的人机交互。

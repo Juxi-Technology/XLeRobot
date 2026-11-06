@@ -14,8 +14,7 @@ import time
 import numpy as np
 import math
 
-from lerobot_robot_xlerobot import XLerobotConfig, XLerobot
-# from lerobot_robot_xlerobot import XLerobotClient, XLerobotClientConfig
+from lerobot_robot_xlerobot import XLerobotClient, XLerobotClientConfig, XLerobotConfig, XLerobot
 # from lerobot.utils.robot_utils import busy_wait
 from lerobot.utils.robot_utils import precise_sleep
 from lerobot.utils.visualization_utils import init_rerun, log_rerun_data
@@ -392,21 +391,26 @@ def main():
     parser.add_argument("--robot.id", type=str, default="my_xlerobot_pc", help="Robot config id")
     parser.add_argument("--robot.port1", type=str, default="/dev/ttyACM0", help="Port 1 (so101 + head camera)")
     parser.add_argument("--robot.port2", type=str, default="/dev/ttyACM1", help="Port 2 (same as lekiwi setup)")
+    parser.add_argument("--remote_ip", type=str, default="", help="Host 的 IP；留空则本机直连")
     parser.add_argument("--fps", type=int, default=50, help="Control loop frequency")
     args = parser.parse_args()
 
     # Teleop parameters
     FPS = args.fps
 
-    # Note: the zmq/XLerobotClient connection path is not currently wired up in this
-    # package (XLerobotClient is commented out of lerobot_robot_xlerobot's __init__),
-    # so only the local/wired connection is exposed here.
-    robot_config = XLerobotConfig(
-        id=getattr(args, "robot.id"),
-        port1=getattr(args, "robot.port1"),
-        port2=getattr(args, "robot.port2"),
-    )
-    robot = XLerobot(robot_config)
+    if args.remote_ip:
+        robot_config = XLerobotClientConfig(
+            id=getattr(args, "robot.id"),
+            remote_ip=args.remote_ip,
+        )
+        robot = XLerobotClient(robot_config)
+    else:
+        robot_config = XLerobotConfig(
+            id=getattr(args, "robot.id"),
+            port1=getattr(args, "robot.port1"),
+            port2=getattr(args, "robot.port2"),
+        )
+        robot = XLerobot(robot_config)
     
     try:
         robot.connect()
