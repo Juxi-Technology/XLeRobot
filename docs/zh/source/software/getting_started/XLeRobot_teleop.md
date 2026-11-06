@@ -87,7 +87,36 @@ python software/examples/10_xlerobot_record_bi_leader.py \
 
 ### 10. 底盘单独控制
 
-底盘可以不接手臂和头部单独驱动。插件提供 `xlerobot_base` 机器人类型：只打开 port2（右臂 + 底盘的驱动板），把三个轮子切到速度模式，同一块板上的右臂电机不会被写入，保持原来的位置。
+底盘可以不接手臂和头部单独驱动。
+
+#### 与官方原代码的差异
+
+官方只提供整机 `xlerobot`（双臂 + 头部 + 底盘一起连接），没有只驱动底盘的入口。实现它需要改 1 处 + 新增 2 个文件，`xlerobot.py` 和 lerobot 本身都不用改。
+
+1. 新增 `software/src/robots/xlerobot/base.py`：`XLerobotBase` / `XLerobotBaseConfig`，注册为 `--robot.type=xlerobot_base`
+2. 修改 `software/src/robots/xlerobot/__init__.py`：增加 `from .base import XLerobotBase, XLerobotBaseConfig`。不加会报 `Could not locate device class 'XLerobotBase'`
+3. 新增 `software/examples/11_xlerobot_base_keyboard.py`：键盘控制脚本
+
+`XLerobotBase` 继承 `XLerobot`，只覆盖下面这几个方法：
+
+| 方法 | 官方 `xlerobot` | `xlerobot_base` |
+|-|-|-|
+| `connect()` | 连 bus1 + bus2，走手臂标定 | 只连 bus2，轮子写满圈标定 |
+| `configure()` | 全部电机切位置模式 | 只对轮子切速度模式 |
+| `get_observation()` | 双臂 + 头部 + 轮速 + 相机 | 只读轮速 |
+| `send_action()` | 手臂位置 + 底盘速度 | 只写 `Goal_Velocity` |
+| `disconnect()` | 断开全部 | 只停底盘、断开 bus2 |
+
+不能直接照搬 LeKiwi：LeKiwi 的手臂和底盘在同一条总线，`configure()` 里把 `base_motors` 写成速度模式就够了；XLeRobot 的底盘和**右臂共用 bus2**（1–6 是右臂，7 / 8 / 9 是轮子），官方 `configure()` 会对整条总线 `disable_torque()` 和 `configure_motors()`。所以底盘模式必须把每一步限定在 `base_motors`：
+
+```python
+self.bus2.disable_torque(self.base_motors)
+for name in self.base_motors:
+    self.bus2.write("Operating_Mode", name, OperatingMode.VELOCITY.value)
+self.bus2.enable_torque(self.base_motors)
+```
+
+#### 使用
 
 ```bash
 # 本地：只接 port2 这块驱动板
@@ -98,5 +127,3 @@ python software/examples/11_xlerobot_base_keyboard.py --remote_ip=192.168.0.108
 ```
 
 远程模式只发送 `x.vel` / `y.vel` / `theta.vel`，Host 端的 `send_action` 只会写底盘，手臂不动。
-
-实现见 `software/src/robots/xlerobot/base.py`（`XLerobotBase`，注册为 `--robot.type=xlerobot_base`）。

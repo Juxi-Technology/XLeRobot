@@ -91,7 +91,36 @@ Recording needs an extra package: run `pip install -e ".[dataset]"` inside the l
 
 ### Standalone Base Control
 
-The base can be driven on its own, without the arms or the head. The plugin registers a `xlerobot_base` robot type: it opens only port2 (the right-arm + wheels bus), switches the three wheels to velocity mode, and never writes to the right-arm motors on that bus.
+The base can be driven on its own, without the arms or the head.
+
+#### Differences from the upstream code
+
+Upstream only ships the full `xlerobot` (both arms, head and base connected together); there is no base-only entry point. Enabling it takes one edit plus two new files; `xlerobot.py` and lerobot itself are untouched.
+
+1. New `software/src/robots/xlerobot/base.py`: `XLerobotBase` / `XLerobotBaseConfig`, registered as `--robot.type=xlerobot_base`
+2. Edit `software/src/robots/xlerobot/__init__.py`: add `from .base import XLerobotBase, XLerobotBaseConfig`. Without it, `--robot.type=xlerobot_base` fails with `Could not locate device class 'XLerobotBase'`
+3. New `software/examples/11_xlerobot_base_keyboard.py`: keyboard control script
+
+`XLerobotBase` subclasses `XLerobot` and overrides only these methods:
+
+| Method | Upstream `xlerobot` | `xlerobot_base` |
+|-|-|-|
+| `connect()` | connects bus1 + bus2 and runs arm calibration | connects bus2 only, writes full-turn wheel calibration |
+| `configure()` | every motor to position mode | wheels to velocity mode only |
+| `get_observation()` | arms + head + wheel speed + cameras | wheel speed only |
+| `send_action()` | arm positions + base velocity | writes `Goal_Velocity` only |
+| `disconnect()` | disconnects everything | stops the base and closes bus2 |
+
+LeKiwi's approach cannot be copied as-is: there the arm and the wheels share one bus, so `configure()` only has to switch `base_motors` to velocity mode. On XLeRobot the base shares **bus2 with the right arm** (1–6 are the arm, 7 / 8 / 9 are the wheels), and the upstream `configure()` calls `disable_torque()` and `configure_motors()` on the whole bus. Base mode therefore has to scope every write to `base_motors`:
+
+```python
+self.bus2.disable_torque(self.base_motors)
+for name in self.base_motors:
+    self.bus2.write("Operating_Mode", name, OperatingMode.VELOCITY.value)
+self.bus2.enable_torque(self.base_motors)
+```
+
+#### Usage
 
 ```bash
 # Local: only the port2 driver board is connected
@@ -101,6 +130,4 @@ python software/examples/11_xlerobot_base_keyboard.py --port2=/dev/ttyACM1
 python software/examples/11_xlerobot_base_keyboard.py --remote_ip=192.168.0.108
 ```
 
-In remote mode only `x.vel` / `y.vel` / `theta.vel` are sent, and the Host's `send_action` writes the base alone.
-
-See `software/src/robots/xlerobot/base.py` for the implementation (`XLerobotBase`, registered as `--robot.type=xlerobot_base`). 
+In remote mode only `x.vel` / `y.vel` / `theta.vel` are sent, and the Host's `send_action` writes the base alone. 
