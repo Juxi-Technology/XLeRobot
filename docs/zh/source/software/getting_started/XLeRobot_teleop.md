@@ -14,6 +14,8 @@
 
 远程控制时在命令后加 `--remote_ip=<Host IP>`，树莓派端先运行 `python -m lerobot_robot_xlerobot.xlerobot_host`；不加 `--remote_ip` 则直接驱动本机有线连接的机器人。
 
+键盘操作的数据采集用 `software/examples/12_xlerobot_record_keyboard.py`，键位与上面相同，远程录制同样加 `--remote_ip`。
+
 ### 6. Xbox控制器遥操作  
 
 完整XLeRobot系统的直观游戏手柄控制。运行[5_xlerobot_teleop_xbox.py](https://github.com/Vector-Wangel/XLeRobot/blob/main/software/examples/5_xlerobot_teleop_xbox.py)进行基于Xbox控制器的遥操作，具有人体工学摇杆和扳机映射，实现自然的人机交互。

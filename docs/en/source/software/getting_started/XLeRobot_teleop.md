@@ -14,6 +14,8 @@ Complete system control including dual arms, mobile base, and head motors. Run [
 
 For remote control add `--remote_ip=<host IP>` and start `python -m lerobot_robot_xlerobot.xlerobot_host` on the Pi first; without it the script drives the robot wired to the local machine.
 
+Keyboard data collection uses `software/examples/12_xlerobot_record_keyboard.py` with the same key bindings; add `--remote_ip` for remote recording.
+
 ### Xbox Controller Teleop
 
 Intuitive gamepad control for the full XLeRobot system. Run [5_xlerobot_teleop_xbox.py](https://github.com/Vector-Wangel/XLeRobot/blob/main/software/examples/5_xlerobot_teleop_xbox.py) for Xbox controller-based teleoperation with ergonomic stick and trigger mappings for natural human-robot interaction.
